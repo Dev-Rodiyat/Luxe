@@ -16,11 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const allowedOrigins = [
-  process.env.SERVER_URL,
-  "https://trackfi-beta.vercel.app",
-  "https://track-fi.vercel.app"
-];
+const allowedOrigins = process.env.CLIENT_URL
 
 app.use(cors({
   origin: function (origin, callback) {
