@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: [process.env.CLIENT_URL, 'https://trackfi-beta.vercel.app/'],
   credentials: true,
   methods: 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
   optionsSuccessStatus: 200,
