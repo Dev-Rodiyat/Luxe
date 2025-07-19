@@ -16,12 +16,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+const allowedOrigins = [
+  process.env.CLIENT_URL || "https://trackfi-beta.vercel.app",
+  "https://trackfi-beta.vercel.app"
+];
+
 app.use(cors({
-  origin: [process.env.CLIENT_URL, 'https://trackfi-beta.vercel.app/'],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
-  methods: 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
-  optionsSuccessStatus: 200,
+  methods: 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
 }));
+
+app.use((req, res, next) => {
+  console.log("Origin:", req.headers.origin);
+  next();
+});
 
 app.use("/user", userRoute);
 app.use("/expense", expenseRoute);
