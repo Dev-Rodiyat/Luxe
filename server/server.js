@@ -9,7 +9,6 @@ const userRoute = require("./route/userRoute");
 const notificationRoute = require("./route/notificationRoute");
 const productRoute = require("./route/ProductRoute");
 const orderRoute = require("./route/OrderRoute");
-const paymentRoute = require("./route/paymentRoute");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -40,7 +39,6 @@ app.use(cors({
 app.use("/user", userRoute);
 app.use("/product", productRoute);
 app.use("/order", orderRoute);
-app.use("/payment", paymentRoute);
 app.use("/notification", notificationRoute);
 
 app.get('/', (req, res) => console.log('Success'));

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -9,28 +9,38 @@ export default function CartModal({ isOpen, onClose }) {
     const dispatch = useDispatch();
     const { items: cartItems, loading: cartLoading, error: cartError, lastAction } = useSelector((state) => state.cart);
     const { user } = useSelector((state) => state.user);
+    const hasShownToast = useRef(false);
 
     useEffect(() => {
-        if (lastAction && lastAction.includes("added")) {
-            toast.success("Product added to cart");
-            dispatch(clearCartError());
-        } else if (lastAction && lastAction.includes("removed")) {
-            toast.success("Product removed from cart");
-            dispatch(clearCartError());
+        if (isOpen && lastAction && !hasShownToast.current) {
+            if (lastAction.includes("added")) {
+                const productName = lastAction.match(/"([^"]+)"/)?.[1] || "this product";
+                toast.success(`Product "${productName}" added to cart`, { toastId: `cartAdd-${productName}` });
+                dispatch(clearCartError());
+            } else if (lastAction.includes("removed")) {
+                const productName = lastAction.match(/"([^"]+)"/)?.[1] || "this product";
+                toast.success(`Product "${productName}" removed from cart`, { toastId: `cartRemove-${productName}` });
+                dispatch(clearCartError());
+            }
+            hasShownToast.current = true;
         }
-        if (cartError) {
+        if (cartError && !hasShownToast.current) {
             if (cartError.includes("User not found") || cartError.includes("Unauthorized")) {
-                toast.error("Please log in to manage your cart");
+                toast.error("Please log in to manage your cart", { toastId: "cartAuthError" });
             } else {
-                toast.error(cartError);
+                toast.error(cartError, { toastId: "cartError" });
             }
             dispatch(clearCartError());
+            hasShownToast.current = true;
         }
-    }, [lastAction, cartError, dispatch]);
+        return () => {
+            hasShownToast.current = false; // Reset on cleanup
+        };
+    }, [lastAction, cartError, dispatch, isOpen]);
 
     const handleQuantityChange = (productId, newQuantity) => {
         if (!user) {
-            toast.error("Please log in to manage your cart");
+            toast.error("Please log in to manage your cart", { toastId: "loginPrompt" });
             return;
         }
         if (newQuantity >= 1 && newQuantity <= (cartItems.find(item => item.product?._id === productId)?.product?.quantity || 1)) {
@@ -40,7 +50,7 @@ export default function CartModal({ isOpen, onClose }) {
 
     const handleRemoveItem = (productId) => {
         if (!user) {
-            toast.error("Please log in to manage your cart");
+            toast.error("Please log in to manage your cart", { toastId: "loginPrompt" });
             return;
         }
         dispatch(toggleCart({ productId, quantity: 0 }));
@@ -52,12 +62,14 @@ export default function CartModal({ isOpen, onClose }) {
 
     return (
         <div
-            className={`fixed inset-0 bg-black/50 dark:bg-black/70 z-50 transition-opacity h-full duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-                }`}
+            className={`fixed inset-0 bg-black/50 dark:bg-black/70 z-50 transition-opacity duration-300 ${
+                isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
         >
             <div
-                className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
-                    }`}
+                className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 min-h-screen flex flex-col ${
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                }`}
             >
                 <div className="flex justify-between items-center p-6 border-b border-gray-200/20 dark:border-gray-700/20">
                     <div className="flex items-center space-x-2">
@@ -72,7 +84,7 @@ export default function CartModal({ isOpen, onClose }) {
                     </button>
                 </div>
 
-                <div className="p-6 flex-1 overflow-y-auto h-[calc(100%-8rem)]">
+                <div className="p-6 flex-1 overflow-y-auto">
                     {!user ? (
                         <div className="text-center py-12">
                             <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -145,13 +157,13 @@ export default function CartModal({ isOpen, onClose }) {
                 </div>
 
                 {user && cartItems.length > 0 && (
-                    <div className="p-6 border-t border-gray-200/20 dark:border-gray-700/20 mb-8">
+                    <div className="p-6 border-t border-gray-200/20 dark:border-gray-700/20">
                         <div className="flex justify-between items-center mb-4">
                             <span className="text-lg font-semibold text-gray-900 dark:text-white">Subtotal:</span>
                             <span className="text-lg font-bold text-gray-900 dark:text-white">${calculateSubtotal()}</span>
                         </div>
                         <Link
-                            to="/add-order"
+                            to="/create-order"
                             onClick={onClose}
                             className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transform hover:-translate-y-1 transition-all duration-300"
                         >

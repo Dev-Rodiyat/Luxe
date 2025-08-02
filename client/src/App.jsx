@@ -16,6 +16,7 @@ import ProductDetails from './pages/ProductDetails'
 import { getCart } from './redux/reducers/cartSlice'
 import CreateProduct from './pages/CreateProduct'
 import CreateOrder from './pages/CreateOrder'
+import SellerProducts from './pages/SellerProducts'
 
 function App() {
   const dispatch = useDispatch();
@@ -41,6 +42,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/add-product" element={<CreateProduct />} />
         <Route path="/add-order" element={<CreateOrder />} />
+        <Route path="/my-products" element={<SellerProducts />} />
 
         {/* <Route element={<ProtectedRoute />}></Route> */}
 

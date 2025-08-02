@@ -17,6 +17,7 @@ import ProductCard from "../components/ProductCard";
 export default function Shop() {
   const dispatch = useDispatch();
   const { products, error, loading } = useSelector((state) => state.products);
+  console.log(products)
   const { error: cartError } = useSelector((state) => state.cart);
 
   const maxPrice = products && products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price || 0))) : 2000;

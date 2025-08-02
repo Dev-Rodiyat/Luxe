@@ -63,7 +63,7 @@ export default function Notification({ isOpen, onClose }) {
       }`}
     >
       <div
-        className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg h-full shadow-2xl transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 min-h-screen flex flex-col ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -80,7 +80,7 @@ export default function Notification({ isOpen, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 flex-1 overflow-y-auto h-[calc(100%-8rem)]">
+        <div className="p-6 flex-1 overflow-y-auto">
           {!user ? (
             <div className="text-center py-12">
               <Bell className="w-12 h-12 mx-auto mb-4 text-gray-400" />

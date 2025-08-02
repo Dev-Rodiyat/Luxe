@@ -3,6 +3,7 @@ const { cloudinary } = require("../utils/cloudinary");
 const { Product } = require("../model/ProductModel");
 const { User } = require("../model/userModel");
 const Notification = require("../model/notificationModel");
+const { Order } = require("../model/OrderModel");
 const VALID_CATEGORIES = ["Electronics", "Clothing", "Books", "Beauty", "Home", "Toys", "Other"];
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -68,6 +69,43 @@ const getProductById = asyncHandler(async (req, res) => {
     }
 
     res.json(product);
+});
+
+const getSellerProducts = asyncHandler(async (req, res) => {
+    try {
+        const products = await Product.find({ seller: req.userId }).lean();
+        console.log(products)
+        res.json(products);
+    } catch (err) {
+        console.error("Error fetching seller products:", err);
+        res.status(500).json({ message: "Failed to fetch products" });
+    }
+});
+
+const getSellerOrders = asyncHandler(async (req, res) => {
+    try {
+        const orders = await Order.find({
+            "products.product": { $in: await Product.find({ seller: req.userId }).distinct("_id") },
+        })
+            .populate("buyer", "name email")
+            .populate("products.product", "name price image")
+            .lean();
+
+        const orderedProducts = orders.flatMap((order) =>
+            order.products.map((item) => ({
+                product: item.product,
+                quantity: item.quantity,
+                buyer: { name: order.buyer.name, email: order.buyer.email },
+                orderStatus: order.status,
+                orderDate: order.createdAt,
+            }))
+        );
+
+        res.json(orderedProducts);
+    } catch (err) {
+        console.error("Error fetching seller ordered products:", err);
+        res.status(500).json({ message: "Failed to fetch ordered products" });
+    }
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
@@ -148,5 +186,5 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    createProduct, getProductById, getProducts, updateProduct, deleteProduct
+    createProduct, getProductById, getProducts, updateProduct, deleteProduct, getSellerProducts, getSellerOrders
 }

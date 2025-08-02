@@ -34,11 +34,14 @@ export const getCart = createAsyncThunk(
 
 export const toggleCart = createAsyncThunk(
   "cart/toggle",
-  async ({ productId, quantity }, { rejectWithValue }) => {
+  async ({ productId, quantity }, { rejectWithValue, getState }) => {
     try {
       const res = await API.put(`/user/toggle-cart/${productId}`, { quantity });
-      console.log("API Response (toggleCart):", res.data);
-      return { cart: res.data.cart, message: res.data.message };
+      const productName = getState().products.products.find(p => p._id === productId)?.name || "this product";
+      return {
+        cart: res.data.cart,
+        message: quantity > 0 ? `Product "${productName}" added to cart` : `Product "${productName}" removed from cart`
+      };
     } catch (err) {
       console.error("API Error (toggleCart):", err.response?.data);
       return rejectWithValue(err.response?.data?.message || "Failed to toggle cart");
@@ -84,7 +87,9 @@ const cartSlice = createSlice({
       .addCase(toggleCart.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload.cart;
-        state.lastAction = action.payload.message;
+        if (!state.lastAction) {
+          state.lastAction = action.payload.message;
+        }
         localStorage.setItem("cart", JSON.stringify(action.payload.cart));
       })
       .addCase(toggleCart.rejected, (state, action) => {

@@ -6,12 +6,16 @@ const {
     getProductById,
     updateProduct,
     deleteProduct,
+    getSellerOrders,
+    getSellerProducts,
 } = require("../controller/productController");
 const { protectUser } = require("../middleware/authMiddleware");
 const { upload } = require("../utils/cloudinary");
 
 router.post("/create-product", protectUser, upload.single("image"), createProduct);
 router.get("/get-all-products", getProducts)
+router.get("/get-seller-orders", getSellerOrders)
+router.get("/get-seller-products", getSellerProducts)
 router.get("/get-product/:id", getProductById)
 
 router.put("/update-product/:id", protectUser, upload.single("image"), updateProduct)
