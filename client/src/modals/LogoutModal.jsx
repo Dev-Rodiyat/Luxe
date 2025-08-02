@@ -1,57 +1,65 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { FadeLoader } from "react-spinners";
-import { logoutUser } from "../redux/reducers/userSlice";
+import { useState } from "react"
+import { LogOut, X, Loader2 } from "lucide-react"
+import { logoutUser } from "../redux/reducers/userSlice"
+import { toast } from "react-toastify"
+import { useNavigate } from "react-router-dom"
+import { useDispatch } from "react-redux"
 
 export default function LogoutModal({ isOpen, onClose }) {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
 
-    const handleLogout = async () => {
-    setIsLoading(true);
-    try {
-        const result = await dispatch(logoutUser());
+  if (!isOpen) return null
 
-        if (logoutUser.fulfilled.match(result)) {
-            toast.success("Logged out successfully");
-            navigate("/login");
-        } else {
-            toast.error(result.payload?.message || "Logout failed");
-        }
-    } catch (err) {
-        toast.error("Logout failed");
-    } finally {
-        setIsLoading(false);
-    }
-};
+  const handleConfirm = async () => {
+    setIsLoading(true)
+    await logoutUser() 
+    setIsLoading(false)
+    onClose()
+    toast.success('User logged out successfully!')
+    navigate('/login')
+  }
 
-    if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white p-6 rounded-xl max-w-sm w-full shadow-xl relative">
-                <h2 className="text-xl font-bold mb-4 text-emerald-800">Log out?</h2>
-                <p className="text-gray-600 mb-6">Are you sure you want to log out of your account?</p>
-                <div className="flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        disabled={isLoading}
-                        className="px-4 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleLogout}
-                        disabled={isLoading}
-                        className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
-                    >
-                        {isLoading ? <FadeLoader size={16} color="#fff" /> : 'Yes'}
-                    </button>
-                </div>
-            </div>
+      {/* Modal Content */}
+      <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md border border-gray-200/20 dark:border-gray-700/20 transform scale-100 opacity-100 transition-all duration-300 ease-out">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full mb-4">
+            <LogOut className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Confirm Logout</h2>
+          <p className="text-gray-600 dark:text-gray-400">Are you sure you want to log out of your account?</p>
         </div>
-    );
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 rounded-xl font-semibold border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={isLoading}
+            className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogOut className="w-5 h-5" />}
+            <span>{isLoading ? "Logging Out..." : "Logout"}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }

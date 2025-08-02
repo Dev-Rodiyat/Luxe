@@ -3,7 +3,7 @@ const router = express.Router();
 const { deleteNotification, getUserNotifications, deleteAllNotifications } = require("../controller/notificationController");
 const { protectUser } = require("../middleware/authMiddleware");
 
-router.get("/get-notifications", protectUser, getUserNotifications);
+router.get("/get-all-notifications", protectUser, getUserNotifications);
 
 router.delete(
   "/delete-notification/:notificationId",

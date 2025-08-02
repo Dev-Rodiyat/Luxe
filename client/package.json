@@ -1,5 +1,5 @@
 {
-  "name": "expense",
+  "name": "client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,7 +20,9 @@
     "html2pdf.js": "^0.10.3",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.536.0",
     "papaparse": "^5.5.3",
+    "rc-slider": "^11.1.8",
     "react": "^19.1.0",
     "react-confirm-alert": "^3.0.6",
     "react-dom": "^19.1.0",

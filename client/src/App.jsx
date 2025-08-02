@@ -2,30 +2,31 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import './App.css'
 import Login from './authentication/Login'
 import Register from './authentication/Register'
-import { About } from './pages/About'
-import { Home } from './pages/Home'
+import About from './pages/About'
+import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import NotFound from './pages/NotFound'
 import Settings from './pages/Settings'
 import DashboardLayout from './layouts/DashLayout'
-import Analytics from './pages/Analytics'
-import Transactions from './pages/Transactions'
-import TransactionDetails from './pages/TransactionDetails'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchExpenses } from './redux/reducers/expenseSlice'
 import { useEffect } from 'react'
 import ScrollToTop from './layouts/ScrollToTop'
 import ProtectedRoute from './ProtectedRoute'
+import FAQ from './pages/FAQ'
+import Shop from './pages/Shop'
+import ProductDetails from './pages/ProductDetails'
+import { getCart } from './redux/reducers/cartSlice'
+import CreateProduct from './pages/CreateProduct'
 
 function App() {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchExpenses())
+      dispatch(getCart());
     }
-  })
+  }, [dispatch, user]);
 
   const RenderRoute = () => (
     <Router>
@@ -36,6 +37,10 @@ function App() {
         <Route path='/about' element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/faqs" element={<FAQ />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/add-product" element={<CreateProduct />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path='/dashboard' element={
@@ -43,9 +48,6 @@ function App() {
               <Dashboard />
             </DashboardLayout>
           } />
-          <Route path='/analytics' element={<Analytics />} />
-          <Route path='/transactions' element={<Transactions />} />
-          <Route path="/transaction/:id" element={<TransactionDetails />} />
 
           <Route path='/settings' element={
             <DashboardLayout>

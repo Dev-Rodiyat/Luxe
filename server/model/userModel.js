@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Notification = require("./notificationModel");
-const { Expense } = require("./expenseModel");
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +8,15 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     image: { type: String },
+    imagePublicId: { type: String, default: null },
+    cart: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        quantity: { type: Number, default: 1 }
+      }
+    ],
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }]
   },
   {
     timestamps: true,
@@ -17,21 +25,20 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password") || !this.password) {
-        return next();
-    }
+  if (!this.isModified("password") || !this.password) {
+    return next();
+  }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(this.password, salt);
-    this.password = hashedPassword;
-    next();
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(this.password, salt);
+  this.password = hashedPassword;
+  next();
 });
 
 userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
   const userId = this._id;
 
   try {
-    await Expense.deleteMany({ userId });
     await Notification.deleteMany({ user: userId });
     console.log(`🧹 Cleaned up expenses and notifications for user ${userId}`);
     next();

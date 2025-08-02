@@ -6,11 +6,13 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const errorHandler = require("./middleware/errorMiddleware");
 const userRoute = require("./route/userRoute");
-const expenseRoute = require("./route/expenseRoute");
 const notificationRoute = require("./route/notificationRoute");
+const productRoute = require("./route/ProductRoute");
+const orderRoute = require("./route/OrderRoute");
+const paymentRoute = require("./route/paymentRoute");
 
 const app = express();
-const PORT = process.env.PORT || 2000;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,13 +32,15 @@ app.use(cors({
   methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
 }));
 
-app.use((req, res, next) => {
-  console.log("Origin:", req.headers.origin);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log("Origin:", req.headers.origin);
+//   next();
+// });
 
 app.use("/user", userRoute);
-app.use("/expense", expenseRoute);
+app.use("/product", productRoute);
+app.use("/order", orderRoute);
+app.use("/payment", paymentRoute);
 app.use("/notification", notificationRoute);
 
 app.get('/', (req, res) => console.log('Success'));

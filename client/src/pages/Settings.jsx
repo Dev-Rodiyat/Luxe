@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Footer } from "../components/Footer";
 import { FaEye, FaEyeSlash, FaSignOutAlt } from "react-icons/fa";
 import DeleteUserModal from "../modals/DeleteUserModal";
 import LogoutModal from "../modals/LogoutModal";
@@ -12,9 +11,10 @@ import { updateUser } from "../redux/reducers/userSlice";
 export default function Settings() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+    const [loading, setLoading] = useState(false)
 
     const dispatch = useDispatch();
-    const { user, loading } = useSelector((state) => state.user);
+    const { user } = useSelector((state) => state.user);
 
     const [formData, setFormData] = useState({
         name: "",

@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { ToastContainer } from 'react-toastify'
 import store from './redux/store.js'
 import { Provider } from "react-redux";
+import "rc-slider/assets/index.css";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

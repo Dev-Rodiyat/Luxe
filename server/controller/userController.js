@@ -2,41 +2,11 @@ const asyncHandler = require("express-async-handler");
 const { User } = require("../model/userModel");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils");
-
-const getInitials = (fullName) => {
-    const names = fullName.trim().split(" ");
-    const initials = names.length === 1
-        ? names[0][0].toUpperCase()
-        : names.slice(0, 2).map(n => n[0].toUpperCase()).join("");
-    return initials;
-};
-
-const getRandomEmeraldShade = () => {
-    const hue = Math.floor(Math.random() * 20) + 140; // 140–159
-    const saturation = Math.floor(Math.random() * 30) + 70; // 70–99%
-    const lightness = Math.floor(Math.random() * 20) + 40; // 40–59%
-    return { h: hue, s: saturation, l: lightness };
-};
-
-const hslToHex = (h, s, l) => {
-    s /= 100;
-    l /= 100;
-    const k = (n) => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n) =>
-        Math.round(
-            255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))
-        )
-            .toString(16)
-            .padStart(2, "0");
-    return `${f(0)}${f(8)}${f(4)}`;
-};
-
-const getTextColorForLightness = (l) => {
-    if (l < 45) return "FFFFFF";
-    if (l < 55) return "FFBF00";
-    return "000000";
-};
+const { cloudinary } = require("../utils/cloudinary");
+const { mongoose } = require("mongoose");
+const { Product } = require("../model/ProductModel");
+const { getInitials, hslToHex, getRandomEmeraldShade, getTextColorForLightness } = require("../utils/placeHolderUtils");
+const { Order } = require("../model/OrderModel");
 
 const registerUser = asyncHandler(async (req, res) => {
     try {
@@ -96,7 +66,6 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 });
 
-
 const loginUser = asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -147,63 +116,173 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
+const updateUserProfileImage = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const image = req.file?.path;
+        const public_id = req.file?.filename;
+
+        if (!image) {
+            return res.status(400).json({ message: "No image uploaded" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (user.imagePublicId) {
+            await cloudinary.uploader.destroy(user.imagePublicId);
+        }
+
+        user.image = image;
+        user.imagePublicId = public_id;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Profile image updated successfully",
+            image: user.image,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteUserProfileImage = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.imagePublicId) {
+        await cloudinary.uploader.destroy(user.imagePublicId);
+    }
+
+    const initials = getInitials(user.name);
+    const { h, s, l } = getRandomEmeraldShade();
+    const bgColor = hslToHex(h, s, l);
+    const textColor = getTextColorForLightness(l);
+
+    user.image = `https://placehold.co/150x150/${bgColor}/${textColor}?text=${initials}&font=inter`;
+    user.imagePublicId = null;
+
+    await user.save();
+
+    res.status(200).json({
+        message: "Profile image deleted and reset to initials",
+        image: user.image,
+    });
+});
+
 const getUser = asyncHandler(async (req, res) => {
     try {
         const userId = req.userId;
 
-        const user = await User.findById(userId).select("-password").lean();
+        const user = await User.findById(userId)
+            .populate('products')
+            .populate('orders')
+            .select("-password")
+            .lean();
+
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        return res.status(200).json({
-            user,
-        });
+        return res.status(200).json({ user });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Error fetching user data" });
     }
 });
 
-const updateUser = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { name } = req.body;
+const toggleCart = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { quantity = 1 } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.name = name;
-
-    const isDefaultImage =
-      user.image?.includes("placehold.co") && user.image?.includes("?text=");
-    if (isDefaultImage) {
-      const initials = getInitials(name);
-      const { h, s, l } = getRandomEmeraldShade();
-      const bgColor = hslToHex(h, s, l);
-      const textColor = getTextColorForLightness(l);
-
-      user.image = `https://placehold.co/150x150/${bgColor}/${textColor}?text=${initials}&font=inter`;
-    }
-
-    const updatedUser = await user.save();
-    const { password, ...userData } = updatedUser.toObject();
-
-    res.status(200).json({ updatedUser: userData });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Server error" });
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: "Invalid product ID" });
   }
+
+  const user = await User.findById(req.userId);
+  if (!user) {
+    res.status(401);
+    throw new Error("Unauthorized: User not found");
+  }
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    return res.status(404).json({ message: "Product not found" });
+  }
+
+  if (product.quantity < quantity) {
+    return res.status(400).json({ message: "Insufficient stock" });
+  }
+
+  const itemIndex = user.cart.findIndex(
+    (item) => item.product && item.product.toString() === productId
+  );
+
+  if (itemIndex !== -1) {
+    user.cart.splice(itemIndex, 1);
+    await user.save();
+    const updatedUser = await User.findById(req.userId).populate("cart.product");
+    return res.status(200).json({
+      message: "Product removed from cart",
+      cart: updatedUser.cart,
+    });
+  }
+
+  user.cart.push({ product: productId, quantity });
+  await user.save();
+
+  const updatedUser = await User.findById(req.userId).populate("cart.product");
+  res.status(200).json({
+    message: "Product added to cart",
+    cart: updatedUser.cart,
+  });
+});
+
+const getCart = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.userId).populate('cart.product');
+    res.status(200).json(user.cart);
+});
+
+const updateUser = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { name } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!name) {
+            return res.status(400).json({ message: "Name is required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.name = name;
+
+        const isDefaultImage =
+            user.image?.includes("placehold.co") && user.image?.includes("?text=");
+        if (isDefaultImage) {
+            const initials = getInitials(name);
+            const { h, s, l } = getRandomEmeraldShade();
+            const bgColor = hslToHex(h, s, l);
+            const textColor = getTextColorForLightness(l);
+
+            user.image = `https://placehold.co/150x150/${bgColor}/${textColor}?text=${initials}&font=inter`;
+        }
+        user.imagePublicId = null;
+
+        const updatedUser = await user.save();
+        const { password, ...userData } = updatedUser.toObject();
+
+        res.status(200).json({ updatedUser: userData });
+    } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 const deleteUser = asyncHandler(async (req, res) => {
@@ -215,10 +294,14 @@ const deleteUser = asyncHandler(async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        if (user.imagePublicId) {
+            await cloudinary.uploader.destroy(user.imagePublicId);
+        }
+
         await user.deleteOne();
 
         res.status(200).json({
-            message: "Account and associated tasks & notifications deleted successfully",
+            message: "Account and associated data deleted successfully",
         });
     } catch (error) {
         console.error("Error deleting user and associated data:", error);
@@ -248,6 +331,10 @@ const logoutUser = asyncHandler(async (req, res) => {
 module.exports = {
     registerUser,
     loginUser,
+    updateUserProfileImage,
+    deleteUserProfileImage,
+    toggleCart,
+    getCart,
     logoutUser,
     deleteUser,
     getUser,

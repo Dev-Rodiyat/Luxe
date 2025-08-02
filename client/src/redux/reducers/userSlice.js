@@ -1,188 +1,171 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../utils/api";
+import API from "../../utils/api";
 
-export const loginUser = createAsyncThunk("user/login", async (credentials, thunkAPI) => {
-    try {
-        const res = await api.post("/user/login", credentials);
-        localStorage.setItem("user", JSON.stringify(res.data));
+const userFromStorage = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user"))
+    : null;
 
-        return res.data;
-    } catch (err) {
-        return thunkAPI.rejectWithValue(err.response.data);
-    }
-});
+const saveUserToStorage = (user) => {
+    localStorage.setItem("user", JSON.stringify(user));
+};
 
-export const registerUser = createAsyncThunk("user/register", async (userData, thunkAPI) => {
-    try {
-        const res = await api.post("/user/register", userData);
-        return res.data;
-    } catch (err) {
-        return thunkAPI.rejectWithValue(err.response.data);
-    }
-});
+const removeUserFromStorage = () => {
+    localStorage.removeItem("user");
+};
 
-export const getUser = createAsyncThunk("user/getUser", async (_, thunkAPI) => {
-    try {
-        const res = await api.get("/user/get-user");
-        return res.data;
-    } catch (err) {
-        return thunkAPI.rejectWithValue(err.response.data);
-    }
-});
-
-export const updateUser = createAsyncThunk(
-    "user/updateUser",
-    async (updatedData, thunkAPI) => {
+export const registerUser = createAsyncThunk(
+    "user/register",
+    async (formData, { rejectWithValue }) => {
         try {
-            const res = await api.put("/user/update-user", updatedData);
-            return res.data;
+            const { data } = await API.post("/user/register", formData);
+            saveUserToStorage(data);
+            return data;
         } catch (err) {
-            return thunkAPI.rejectWithValue(err.response?.data || "Error");
+            return rejectWithValue(err.response?.data?.message || "Registration failed");
         }
     }
 );
 
-export const deleteUser = createAsyncThunk("user/deleteUser", async (_, thunkAPI) => {
-    try {
-        const res = await api.delete("/user/delete-user");
-        return res.data;
-    } catch (err) {
-        return thunkAPI.rejectWithValue(err.response.data);
+export const loginUser = createAsyncThunk(
+    "user/login",
+    async (credentials, { rejectWithValue }) => {
+        try {
+            const { data } = await API.post("/user/login", credentials);
+            saveUserToStorage(data);
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Login failed");
+        }
     }
-});
+);
 
-export const logoutUser = createAsyncThunk("user/logout", async (_, thunkAPI) => {
-    try {
-        const res = await api.post("/user/logout");
-        return res.data;
-    } catch (err) {
-        return thunkAPI.rejectWithValue(err.response.data);
+export const getCurrentUser = createAsyncThunk(
+    "user/getCurrent",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await API.get("/user/get-user");
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to fetch user");
+        }
     }
-});
+);
 
-let initialUser = null;
-try {
-    const raw = localStorage.getItem("user");
-    initialUser = raw && raw !== "undefined" ? JSON.parse(raw) : null;
-} catch (e) {
-    initialUser = null;
-}
+export const updateUser = createAsyncThunk(
+    "user/update",
+    async (updatedData, { rejectWithValue }) => {
+        try {
+            const { data } = await API.put("/user/update-user", updatedData);
+            saveUserToStorage(data);
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Update failed");
+        }
+    }
+);
+
+export const logoutUser = createAsyncThunk(
+    "user/logoutUser",
+    async (_, { rejectWithValue }) => {
+        try {
+            await API.post("/user/logout");
+            removeUserFromStorage();
+            return true;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Logout failed");
+        }
+    }
+);
+
+export const deleteUser = createAsyncThunk(
+    "user/delete",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { data } = await API.delete("/user/delete-user");
+            removeUserFromStorage();
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Delete failed");
+        }
+    }
+);
 
 const userSlice = createSlice({
     name: "user",
     initialState: {
-        user: initialUser,
+        user: userFromStorage,
+        status: "idle",
         error: null,
-        success: false,
-        loading: {
-            login: false,
-            register: false,
-            get: false,
-            update: false,
-            delete: false,
-            logout: false,
-        },
     },
-    reducers: {
-        logout: (state) => {
-            state.user = null;
-        },
-        clearStatus: (state) => {
-            state.success = false;
-            state.error = null;
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(loginUser.pending, (state) => {
-                state.loading.login = true;
-                state.error = null;
-            })
-            .addCase(loginUser.fulfilled, (state, action) => {
-                state.user = action.payload;
-                state.loading.login = false;
-            })
-            .addCase(loginUser.rejected, (state, action) => {
-                state.error = action.payload.message || 'Login Failed';
-                state.loading.login = false;
-            })
-
             .addCase(registerUser.pending, (state) => {
-                state.loading.register = true;
-                state.error = null;
+                state.status = "loading";
             })
             .addCase(registerUser.fulfilled, (state, action) => {
+                state.status = "succeeded";
                 state.user = action.payload;
-                state.loading.register = false;
+                localStorage.setItem("user", JSON.stringify(action.payload));
             })
             .addCase(registerUser.rejected, (state, action) => {
-                state.error = action.payload.message || 'Registration Failed';
-                state.loading.register = false;
+                state.status = "failed";
+                state.error = action.payload;
             })
-
-            .addCase(getUser.pending, (state) => {
-                state.loading.get = true;
-                state.error = null;
+            .addCase(loginUser.pending, (state) => {
+                state.status = "loading";
             })
-            .addCase(getUser.fulfilled, (state, action) => {
+            .addCase(loginUser.fulfilled, (state, action) => {
+                state.status = "succeeded";
                 state.user = action.payload;
-                state.loading.get = false;
+                localStorage.setItem("user", JSON.stringify(action.payload));
             })
-            .addCase(getUser.rejected, (state, action) => {
-                state.error = action.payload.message || 'Failed to get user';
-                state.loading.get = false;
+            .addCase(getCurrentUser.pending, (state) => {
+                state.status = "loading";
+            })
+            .addCase(getCurrentUser.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.user = action.payload;
+            })
+            .addCase(getCurrentUser.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload;
             })
 
             .addCase(updateUser.pending, (state) => {
-                state.loading.update = true;
-                state.error = null;
+                state.status = "loading";
             })
             .addCase(updateUser.fulfilled, (state, action) => {
-                const updatedUser = action.payload.updatedUser;
-                state.user = updatedUser;
-                state.loading.update = false;
-                state.success = true;
-                localStorage.setItem("user", JSON.stringify(updatedUser));
-            })
-            .addCase(updateUser.rejected, (state, action) => {
-                state.error = action.payload.message || 'Update Failed';
-                state.loading.update = false;
+                state.status = "succeeded";
+                state.user = action.payload;
+                localStorage.setItem("user", JSON.stringify(action.payload));
             })
 
-            .addCase(logoutUser.pending, (state) => {
-                state.loading.logout = true;
-                state.error = null;
-            })
             .addCase(logoutUser.fulfilled, (state) => {
                 state.user = null;
-                state.success = true;
-                state.loading.logout = false;
+                state.status = "idle";
                 localStorage.removeItem("user");
             })
             .addCase(logoutUser.rejected, (state, action) => {
-                state.user = null;
-                state.loading.logout = false;
-                localStorage.removeItem("user");
-                state.error = action.payload?.message || "Logout failed";
+                state.status = "failed";
+                state.error = action.payload;
             })
 
             .addCase(deleteUser.pending, (state) => {
-                state.loading.delete = true;
-                state.error = null;
+                state.status = "loading";
             })
             .addCase(deleteUser.fulfilled, (state) => {
+                state.status = "succeeded";
                 state.user = null;
-                state.loading.delete = false;
-                state.success = true;
                 localStorage.removeItem("user");
             })
             .addCase(deleteUser.rejected, (state, action) => {
-                state.error = action.payload.message || 'Delete failed';
-                state.loading.delete = false;
-                localStorage.removeItem("user");
+                state.status = "failed";
+                state.error = action.payload;
             });
     },
 });
 
-export const { logout } = userSlice.actions;
+// export const { logoutUser } = userSlice.actions;
+
 export default userSlice.reducer;
