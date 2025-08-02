@@ -20,11 +20,9 @@ const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-
+    const dispatch = useDispatch();
+    
     const handleInputChange = (e) => {
-        const dispatch = useDispatch();
-        const navigate = useNavigate();
-        const [isLoading, setIsLoading] = useState(false);
 
         const { name, value } = e.target
         setFormData({

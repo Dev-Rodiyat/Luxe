@@ -135,7 +135,7 @@ const orderSlice = createSlice({
         state.loading = false;
         state.myOrders = [action.payload, ...state.myOrders];
         localStorage.setItem("myOrders", JSON.stringify(state.myOrders));
-        state.lastAction = `Order #${action.payload._id} created successfully`;
+        state.lastAction = `Order created successfully`;
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.loading = false;
