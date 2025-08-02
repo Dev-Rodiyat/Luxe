@@ -13,7 +13,7 @@ Luxe is an e-commerce application featuring:
 - Authentication: JWT-based authentication for secure user and seller actions.
 - Real-time Updates: Local storage synchronization for offline access.
 
-# The project is divided into a frontend (React) and backend (Node.js/Express with MongoDB), with APIs for product and order management.
+**The project is divided into a frontend (React) and backend (Node.js/Express with MongoDB), with APIs for product and order management.**
 
 **Prerequisites**
 

@@ -74,7 +74,6 @@ const getProductById = asyncHandler(async (req, res) => {
 const getSellerProducts = asyncHandler(async (req, res) => {
     try {
         const products = await Product.find({ seller: req.userId }).lean();
-        console.log(products)
         res.json(products);
     } catch (err) {
         console.error("Error fetching seller products:", err);

@@ -28,7 +28,6 @@ export const createOrder = createAsyncThunk(
   async (orderData, { rejectWithValue }) => {
     try {
       const res = await API.post("/order/create-order", orderData);
-      console.log("API Response (createOrder):", res.data);
       return res.data;
     } catch (err) {
       console.error("API Error (createOrder):", err.response?.data);
@@ -42,7 +41,6 @@ export const getMyOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await API.get("/order/my-orders");
-      console.log("API Response (getMyOrders):", res.data);
       return res.data;
     } catch (err) {
       console.error("API Error (getMyOrders):", err.response?.data);
@@ -56,7 +54,6 @@ export const cancelOrder = createAsyncThunk(
   async (orderId, { rejectWithValue }) => {
     try {
       const res = await API.put(`/order/cancel-order/${orderId}`);
-      console.log("API Response (cancelOrder):", res.data);
       return { orderId, message: res.data.message, order: res.data.order };
     } catch (err) {
       console.error("API Error (cancelOrder):", err.response?.data);
@@ -70,7 +67,6 @@ export const getSellerOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await API.get("/order/seller-orders");
-      console.log("API Response (getSellerOrders):", res.data);
       return res.data;
     } catch (err) {
       console.error("API Error (getSellerOrders):", err.response?.data);
@@ -84,7 +80,6 @@ export const getAllOrders = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await API.get("/order/get-all-orders");
-      console.log("API Response (getAllOrders):", res.data);
       return res.data;
     } catch (err) {
       console.error("API Error (getAllOrders):", err.response?.data);
@@ -98,7 +93,6 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
       const res = await API.put(`/order/update-order-status/${orderId}`, { status });
-      console.log("API Response (updateOrderStatus):", res.data);
       return { orderId, message: res.data.message, order: res.data.order };
     } catch (err) {
       console.error("API Error (updateOrderStatus):", err.response?.data);

@@ -40,7 +40,7 @@ userSchema.pre('deleteOne', { document: true, query: false }, async function (ne
 
   try {
     await Notification.deleteMany({ user: userId });
-    console.log(`🧹 Cleaned up expenses and notifications for user ${userId}`);
+    console.log(`Cleaned up notifications for user ${userId}`);
     next();
   } catch (error) {
     console.error('Error cleaning up user-related data:', error);

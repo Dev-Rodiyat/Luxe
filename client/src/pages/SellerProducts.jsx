@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Package, Edit, Trash2 } from "lucide-react";
+import { Package } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { getSellerProducts, deleteProduct, clearProductError } from "../redux/reducers/productSlice";
@@ -44,6 +44,12 @@ export default function SellerProducts() {
             return;
         }
         dispatch(deleteProduct(productId));
+    };
+
+    const handleProductClick = (productId, event) => {
+        event.preventDefault(); // Prevent default behavior if needed
+        event.stopPropagation(); // Prevent event bubbling from child elements
+        navigate(`/product/${productId}`);
     };
 
     return (
@@ -96,7 +102,8 @@ export default function SellerProducts() {
                                 {sellerProducts.map((product) => (
                                     <div
                                         key={product._id}
-                                        className="bg-white dark:bg-gray-900/50 rounded-lg p-6 border border-gray-200/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300"
+                                        onClick={(event) => handleProductClick(product._id, event)}
+                                        className="bg-white dark:bg-gray-900/50 rounded-lg p-6 border cursor-pointer border-gray-200/20 dark:border-gray-700/20 hover:shadow-lg transition-all duration-300"
                                     >
                                         <img
                                             src={product.image || "/placeholder.svg?height=160&width=160&query=product image"}
@@ -106,23 +113,7 @@ export default function SellerProducts() {
                                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{product.name || "Unnamed Product"}</h3>
                                         <p className="text-gray-600 dark:text-gray-400">Price: ${product.price?.toFixed(2) || 0}</p>
                                         <p className="text-gray-600 dark:text-gray-400">Quantity: {product.quantity || 0}</p>
-                                        <div className="flex justify-between mt-4">
-                                            <Link
-                                                to={`/edit-product/${product._id}`}
-                                                className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                                <span>Edit</span>
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDeleteProduct(product._id)}
-                                                className="flex items-center space-x-2 text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                                                disabled={loading}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                <span>Delete</span>
-                                            </button>
-                                        </div>
+
                                     </div>
                                 ))}
                             </div>

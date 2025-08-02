@@ -45,7 +45,6 @@ export const getSellerProducts = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const res = await API.get("/product/get-seller-products");
-            console.log("API Response (getSellerProducts):", res.data);
             return res.data;
         } catch (err) {
             console.error("API Error (getSellerProducts):", err.response?.data);
@@ -59,7 +58,6 @@ export const getSellerOrders = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const res = await API.get("/product/get-seller-orders");
-            console.log("API Response (getSellerOrders):", res.data);
             return res.data;
         } catch (err) {
             console.error("API Error (getSellerOrders):", err.response?.data);
@@ -83,7 +81,6 @@ export const createProduct = createAsyncThunk(
             const res = await API.post("/product/create-product", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
-            console.log("API Response (createProduct):", res.data);
             return res.data;
         } catch (err) {
             console.error("API Error (createProduct):", err.response?.data);
