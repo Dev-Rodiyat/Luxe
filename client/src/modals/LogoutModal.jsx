@@ -8,12 +8,13 @@ import { useDispatch } from "react-redux"
 export default function LogoutModal({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   if (!isOpen) return null
 
   const handleConfirm = async () => {
     setIsLoading(true)
-    await logoutUser() 
+    await dispatch(logoutUser() )
     setIsLoading(false)
     onClose()
     toast.success('User logged out successfully!')

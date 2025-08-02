@@ -4,10 +4,8 @@ import Login from './authentication/Login'
 import Register from './authentication/Register'
 import About from './pages/About'
 import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
 import NotFound from './pages/NotFound'
 import Settings from './pages/Settings'
-import DashboardLayout from './layouts/DashLayout'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import ScrollToTop from './layouts/ScrollToTop'
@@ -17,6 +15,7 @@ import Shop from './pages/Shop'
 import ProductDetails from './pages/ProductDetails'
 import { getCart } from './redux/reducers/cartSlice'
 import CreateProduct from './pages/CreateProduct'
+import CreateOrder from './pages/CreateOrder'
 
 function App() {
   const dispatch = useDispatch();
@@ -41,20 +40,9 @@ function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/add-product" element={<CreateProduct />} />
+        <Route path="/add-order" element={<CreateOrder />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route path='/dashboard' element={
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
-          } />
-
-          <Route path='/settings' element={
-            <DashboardLayout>
-              <Settings />
-            </DashboardLayout>
-          } />
-        </Route>
+        {/* <Route element={<ProtectedRoute />}></Route> */}
 
         <Route path="*" element={<NotFound />} />
       </Routes>
