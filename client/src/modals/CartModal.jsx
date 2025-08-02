@@ -52,11 +52,11 @@ export default function CartModal({ isOpen, onClose }) {
 
     return (
         <div
-            className={`fixed inset-0 bg-black/50 dark:bg-black/70 z-50 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 bg-black/50 dark:bg-black/70 z-50 transition-opacity h-full duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
         >
             <div
-                className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg h-full shadow-2xl transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
+                className={`fixed top-0 right-0 w-full sm:w-96 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-2xl transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
                     }`}
             >
                 <div className="flex justify-between items-center p-6 border-b border-gray-200/20 dark:border-gray-700/20">
@@ -145,13 +145,13 @@ export default function CartModal({ isOpen, onClose }) {
                 </div>
 
                 {user && cartItems.length > 0 && (
-                    <div className="p-6 border-t border-gray-200/20 dark:border-gray-700/20">
+                    <div className="p-6 border-t border-gray-200/20 dark:border-gray-700/20 mb-8">
                         <div className="flex justify-between items-center mb-4">
                             <span className="text-lg font-semibold text-gray-900 dark:text-white">Subtotal:</span>
                             <span className="text-lg font-bold text-gray-900 dark:text-white">${calculateSubtotal()}</span>
                         </div>
                         <Link
-                            to="/create-order"
+                            to="/add-order"
                             onClick={onClose}
                             className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transform hover:-translate-y-1 transition-all duration-300"
                         >

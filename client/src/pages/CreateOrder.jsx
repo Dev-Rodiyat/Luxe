@@ -11,19 +11,19 @@ export default function CreateOrder() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { items: cartItems, loading: cartLoading } = useSelector((state) => state.cart);
-  const { loading: orderLoading, error: orderError, lastAction } = useSelector((state) => state.orders);
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { loading: orderLoading, error: orderError, lastAction } = useSelector((state) => state.order);
+  const { user } = useSelector((state) => state.user);
 
   const totalAmount = cartItems
     .reduce((total, item) => total + (item.product?.price || 0) * (item.quantity || 1), 0)
     .toFixed(2);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!user) {
       toast.error("Please log in to place an order");
       navigate("/login");
     }
-  }, [isAuthenticated, navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
     if (lastAction) {
